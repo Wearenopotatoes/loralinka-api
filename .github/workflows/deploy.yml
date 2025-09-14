@@ -20,7 +20,14 @@ jobs:
 
     - name: Add server to known hosts
       run: |
+        echo "Adding server ${{ secrets.SERVER_HOST }} to known hosts..."
         ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+        echo "Known hosts updated successfully"
+
+    - name: Test SSH connection
+      run: |
+        echo "Testing SSH connection to ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }}..."
+        ssh -o ConnectTimeout=10 ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} "echo 'SSH connection successful'"
 
     - name: Create deployment directory
       run: |
@@ -50,14 +57,24 @@ jobs:
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
           cd ${{ secrets.DEPLOY_PATH }}
 
+          # Create required directories for nginx and certbot
+          mkdir -p nginx certbot/conf certbot/www
+
           # Stop existing containers
           docker compose down || true
 
           # Build and start new containers
           docker compose up -d --build
 
+          # Wait for services to be ready
+          sleep 10
+
+          # Check if containers are running
+          docker compose ps
+
           # Clean up unused images
           docker image prune -f
 
           echo "✅ Deployment completed successfully!"
+          echo "🔒 HTTPS setup ready - run init-letsencrypt script to generate SSL certificates"
         EOF
