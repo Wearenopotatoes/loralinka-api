@@ -1,9 +1,10 @@
 from typing import Union
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from src.features.users.controller import router as users_router
 from src.features.catalogs.controller import router as catalogs_router
 from src.features.emergencies.controller import router as emergencies_router
+from src.auth.dependencies import verify_api_key
 
 from scalar_fastapi import get_scalar_api_reference
 app = FastAPI(
@@ -15,9 +16,9 @@ app = FastAPI(
 )
 
 # Registrar routers de features para exponer endpoints y documentarlos
-app.include_router(users_router)
-app.include_router(catalogs_router)
-app.include_router(emergencies_router)
+app.include_router(users_router, dependencies=[Depends(verify_api_key)])
+app.include_router(catalogs_router, dependencies=[Depends(verify_api_key)])
+app.include_router(emergencies_router, dependencies=[Depends(verify_api_key)])
 
 # Add a route to display the Scalar documentation UI
 @app.get("/scalar", include_in_schema=False)

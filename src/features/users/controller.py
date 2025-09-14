@@ -1,7 +1,8 @@
 ﻿from typing import List
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from src.database.db import DbSession
+from src.auth.dependencies import verify_api_key
 
 from .model import UserCreate, UserUpdate, UserOut, LoginRequest
 from . import service
