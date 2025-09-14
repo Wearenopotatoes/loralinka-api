@@ -58,7 +58,10 @@ jobs:
           cd ${{ secrets.DEPLOY_PATH }}
 
           # Create required directories for nginx and certbot
-          mkdir -p nginx certbot/conf certbot/www
+          mkdir -p nginx certbot/conf certbot/www scripts
+
+          # Make scripts executable
+          chmod +x scripts/*.sh
 
           # Stop existing containers
           docker compose down || true
@@ -76,5 +79,42 @@ jobs:
           docker image prune -f
 
           echo "✅ Deployment completed successfully!"
-          echo "🔒 HTTPS setup ready - run init-letsencrypt script to generate SSL certificates"
+        EOF
+
+    - name: Setup SSL certificates (first time only)
+      run: |
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          cd ${{ secrets.DEPLOY_PATH }}
+
+          # Check if SSL certificate already exists
+          if [ ! -f "/etc/letsencrypt/live/api.loralink.live/fullchain.pem" ]; then
+            echo "🔒 SSL certificate not found, setting up SSL..."
+
+            # Update email in SSL script if provided
+            if [ ! -z "${{ secrets.SSL_EMAIL }}" ]; then
+              sed -i 's/your-email@example.com/${{ secrets.SSL_EMAIL }}/g' scripts/init-ssl.sh
+            fi
+
+            # Run SSL setup script
+            if bash scripts/init-ssl.sh; then
+              echo "✅ SSL setup completed successfully!"
+
+              # Setup SSL renewal cron job
+              echo "Setting up SSL renewal cron job..."
+              (crontab -l 2>/dev/null; echo "0 0,12 * * * cd ${{ secrets.DEPLOY_PATH }} && bash scripts/renew-ssl.sh") | crontab -
+              echo "✅ SSL renewal cron job installed"
+            else
+              echo "❌ SSL setup failed"
+              echo "You can manually run: bash scripts/init-ssl.sh"
+            fi
+          else
+            echo "✅ SSL certificate already exists, skipping SSL setup"
+
+            # Ensure renewal cron job exists
+            if ! crontab -l 2>/dev/null | grep -q "renew-ssl.sh"; then
+              echo "Adding SSL renewal cron job..."
+              (crontab -l 2>/dev/null; echo "0 0,12 * * * cd ${{ secrets.DEPLOY_PATH }} && bash scripts/renew-ssl.sh") | crontab -
+              echo "✅ SSL renewal cron job installed"
+            fi
+          fi
         EOF
