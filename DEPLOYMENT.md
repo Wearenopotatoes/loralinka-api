@@ -28,7 +28,7 @@ Go to your GitHub repository → Settings → Secrets and variables → Actions,
 2. **Verify Docker and Docker Compose are installed:**
    ```bash
    docker --version
-   docker-compose --version
+   docker compose version
    ```
 
 ## SSH Key Setup
@@ -82,9 +82,9 @@ Go to Actions tab → Deploy to Server → Run workflow
 
 ### Docker build fails
 - SSH into server and check Docker daemon: `sudo systemctl status docker`
-- Check container logs: `docker-compose logs`
+- Check container logs: `docker compose logs`
 
 ### Application not responding
-- Check if containers are running: `docker-compose ps`
-- Check application logs: `docker-compose logs api`
+- Check if containers are running: `docker compose ps`
+- Check application logs: `docker compose logs api`
 - Verify `.env` file was created correctly
