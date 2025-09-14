@@ -1,6 +1,7 @@
 from typing import Union
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi.middleware.cors import CORSMiddleware
 from src.features.users.controller import router as users_router
 from src.features.catalogs.controller import router as catalogs_router
 from src.features.emergencies.controller import router as emergencies_router
@@ -17,6 +18,15 @@ app = FastAPI(
     redoc_url=None
 )
 
+# Add CORS middleware for documentation UI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
@@ -28,7 +38,7 @@ app.include_router(emergencies_router, dependencies=[Depends(verify_api_key)])
 # Add a route to display the Scalar documentation UI
 @app.get("/scalar", include_in_schema=False)
 @limiter.limit("10/minute")
-async def scalar_html(request):
+async def scalar_html(request: Request):
     return get_scalar_api_reference(
         openapi_url=app.openapi_url,
         title=app.title,
