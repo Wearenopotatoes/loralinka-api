@@ -5,6 +5,8 @@ from src.features.users.controller import router as users_router
 from src.features.catalogs.controller import router as catalogs_router
 from src.features.emergencies.controller import router as emergencies_router
 from src.auth.dependencies import verify_api_key
+from src.auth.rate_limiter import limiter, rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from scalar_fastapi import get_scalar_api_reference
 app = FastAPI(
@@ -15,6 +17,9 @@ app = FastAPI(
     redoc_url=None
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
 # Registrar routers de features para exponer endpoints y documentarlos
 app.include_router(users_router, dependencies=[Depends(verify_api_key)])
 app.include_router(catalogs_router, dependencies=[Depends(verify_api_key)])
@@ -22,7 +27,8 @@ app.include_router(emergencies_router, dependencies=[Depends(verify_api_key)])
 
 # Add a route to display the Scalar documentation UI
 @app.get("/scalar", include_in_schema=False)
-async def scalar_html():
+@limiter.limit("10/minute")
+async def scalar_html(request):
     return get_scalar_api_reference(
         openapi_url=app.openapi_url,
         title=app.title,
