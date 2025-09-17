@@ -19,11 +19,11 @@ app = FastAPI(
     redoc_url=None
 )
 
-# Add CORS middleware for documentation UI
+# Add CORS middleware - Allow everything
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5000", "http://localhost:5000", "http://loralink.live"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
