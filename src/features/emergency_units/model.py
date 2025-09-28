@@ -21,8 +21,6 @@ class EmergencyUnitOut(BaseModel):
     name: str
     latitud: float
     longitud: float
-    
-    assigned_emergency_id: Optional[int] = None
 
 
 class EmergencyUnitWithStats(EmergencyUnitOut):
