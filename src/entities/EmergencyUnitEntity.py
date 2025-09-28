@@ -1,5 +1,5 @@
 ﻿# src/entities/emergency_unit.py
-from sqlalchemy import Column, Integer, String, Numeric
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey
 from sqlalchemy.orm import relationship
 from .BaseEntity import Base
 
