@@ -11,7 +11,7 @@ services:
       - redis
     restart: unless-stopped
   webapp:
-    build: ./proyecto/LoRa_linky
+    build: ../proyecto/LoRa_linky
     expose:
       - "5000"
     restart: unless-stopped
