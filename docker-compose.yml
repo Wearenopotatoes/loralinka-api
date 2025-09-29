@@ -10,11 +10,6 @@ services:
     depends_on:
       - redis
     restart: unless-stopped
-  webapp:
-    build: ../proyecto/LoRa_linky
-    expose:
-      - "5000"
-    restart: unless-stopped
   nginx:
     image: nginx:alpine
     ports:
@@ -26,7 +21,6 @@ services:
       - ./certbot:/var/www/certbot:ro
     depends_on:
       - api
-      - webapp
     restart: unless-stopped
   redis:
     image: redis:7-alpine
